@@ -9,14 +9,18 @@ const app = express();
 const port = Number(process.env.PORT) || 3001;
 const server = http.createServer(app);
 
-app.get('/:channel', (req, res) => {
-  const wss = new ws.Server({ server, path: `/${req.params.channel}` });
+app.get('/:path', (req, res) => {
+  const wss = new ws.Server({ server });
 
   wss.on('connection', ws => {
-    ws.on('message', message => {
-      console.log('Received: ' + message);
+    ws.on('message', (message: any) => {
+      const room = JSON.parse(message).room;
+
+      // console.log('Received: ' + message);
       wss.clients.forEach(client => {
-        client.send(message);
+        if (client.protocol === room) {
+          client.send(message);
+        }
       });
     });
 
@@ -26,6 +30,4 @@ app.get('/:channel', (req, res) => {
   });
 });
 
-server.listen(
-  port, () => console.log(`Hello app listening on port ${port}!`)
-);
+server.listen(port, () => console.log(`Hello app listening on port ${port}!`));
